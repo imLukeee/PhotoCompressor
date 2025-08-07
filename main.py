@@ -1,6 +1,7 @@
-from PIL import Image
+from PIL import Image, ImageTk
 import customtkinter as ctk
 from tkinter import filedialog
+from ui import *
 
 class App(ctk.CTk):
     def __init__(self):
@@ -28,22 +29,20 @@ class App(ctk.CTk):
         self.grid_rowconfigure((0,1,2), uniform = 'a')
 
         #create ui elements
-        ImportImageSelector(self, font = import_image_button_font)
+        self.import_button = ImportImageButton(self, font = import_image_button_font, func = self.import_image)
 
 
         self.mainloop()
 
-
-class ImportImageSelector(ctk.CTkButton):
-    def __init__(self, parent, font):
-        super().__init__(master = parent, text = 'Select Image', font = font, command = self.select_image_file)
-        self.place(relx = 0.5, rely = 0.5, relwidth = 0.5, relheight = 0.075, anchor = 'center')
-
-    
-    def select_image_file(self):
+    def import_image(self):
         filepath = filedialog.askopenfilename()
-        img = Image.open(filepath)
-        img.show()
+        self.original_image = Image.open(filepath)
+        self.import_button.place_forget()
+
+        self.image_tk = ImageTk.PhotoImage(self.original_image)
+
+        self.image_preview = ImageCanvas(self, self.image_tk)
+
 
 if __name__ == "__main__":
     App()
