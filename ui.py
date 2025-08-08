@@ -17,18 +17,20 @@ class Initiate_App(ctk.CTkButton):
         self.place_forget()
 
         self.image_preview = ImageCanvas(self.parent, self.original_image)
+        self.controls = UserControls(self.parent, self.original_image)
 
 
 class ImageCanvas(ctk.CTkCanvas):
     def __init__(self, parent, pil_image):
-        super().__init__(master = parent, background = 'white')
+        super().__init__(master = parent, background = "#484848")
         self.place(relx = 0.5, rely = 0.05, relwidth = 0.75, relheight = 0.5, anchor = 'n')
+
         self.original_pil = pil_image
-        self.image_tk = None
+        self.image_tk = ImageTk.PhotoImage(self.original_pil)
 
         self.bind('<Configure>', self.resize_image)
 
-        self.create_image(0, 0, anchor = 'nw', image = pil_image)
+        self.create_image(0, 0, anchor = 'nw', image = self.image_tk)
     
     def resize_image(self, event):
         image_ratio = self.original_pil.width / self.original_pil.height
@@ -50,3 +52,19 @@ class ImageCanvas(ctk.CTkCanvas):
 
         self.delete('all')
         self.create_image(0,0, anchor = 'nw', image = self.image_tk)
+
+
+class UserControls(ctk.CTkFrame):
+    def __init__(self, parent, original):
+        super().__init__(parent, fg_color='white')
+        self.original_image = original
+        self.place(relx = 0.05, rely = 0.6, relwidth = 0.9, relheight = 0.35, anchor = 'nw')
+
+        self.compress_button = ctk.CTkButton(self, text = 'Compress', command = self.compress_image)
+
+        self.compress_button.place(relx = 0.5, rely = 0.8, relwidth = 0.25, relheight = 0.1, anchor = 'center')
+
+    
+    def compress_image(self):
+        #self.original_image.save(f"Compressed_{self.original_image.name}.jpeg", optimize = True, quality = 10)
+        pass
