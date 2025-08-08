@@ -1,7 +1,5 @@
-from PIL import Image, ImageTk
 import customtkinter as ctk
-from tkinter import filedialog
-from ui import *
+from ui import Initiate_App
 
 class App(ctk.CTk):
     def __init__(self):
@@ -20,6 +18,7 @@ class App(ctk.CTk):
         x = screen_width // 2 - (APP_SIZE[0] // 2)
         y = screen_height // 2 - (APP_SIZE[1] // 2)
 
+        #window parameters
         self.title('Photo Compressor')
         self.geometry(f'{APP_SIZE[0]}x{APP_SIZE[1]}+{x}+{y}')
         self.minsize(MIN_SIZE[0], MIN_SIZE[1])
@@ -28,20 +27,11 @@ class App(ctk.CTk):
         self.grid_columnconfigure((0,1,2), uniform = 'a')
         self.grid_rowconfigure((0,1,2), uniform = 'a')
 
-        #create ui elements
-        self.import_button = ImportImageButton(self, font = import_image_button_font, func = self.import_image)
+        #initiate ui and fucntionality
+        Initiate_App(self, font = import_image_button_font)
 
-
+        #run
         self.mainloop()
-
-    def import_image(self):
-        filepath = filedialog.askopenfilename()
-        self.original_image = Image.open(filepath)
-        self.import_button.place_forget()
-
-        self.image_tk = ImageTk.PhotoImage(self.original_image)
-
-        self.image_preview = ImageCanvas(self, self.image_tk)
 
 
 if __name__ == "__main__":
