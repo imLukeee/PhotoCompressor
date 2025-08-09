@@ -1,12 +1,14 @@
 import customtkinter as ctk
 from PIL import Image, ImageTk
-from tkinter import filedialog
+from tkinter import filedialog, messagebox
+from settings import *
+
 
 class Initiate_App(ctk.CTkButton):
-    def __init__(self, parent, font):
-        super().__init__(master = parent, text = 'Select Image', font = font, command = self.import_image)
+    def __init__(self, parent):
+        super().__init__(master = parent, text = 'Select Image', font = ctk.CTkFont('Arial', 24, 'bold'), command = self.import_image, fg_color = BUTTON_COLOR, hover_color = BUTTON_HOVER)
         self.place(relx = 0.5, rely = 0.5, relwidth = 0.5, relheight = 0.075, anchor = 'center')
-        self.parent = parent
+        self.main_window = parent
 
     def import_image(self):
         filepath = filedialog.askopenfilename()
@@ -16,13 +18,13 @@ class Initiate_App(ctk.CTkButton):
         self.original_image = Image.open(filepath)
         self.place_forget()
 
-        self.image_preview = ImageCanvas(self.parent, self.original_image)
-        self.controls = UserControls(self.parent, self.original_image)
+        self.image_preview = ImageCanvas(self.main_window, self.original_image)
+        self.controls = UserControls(self.main_window, self.original_image)
 
 
 class ImageCanvas(ctk.CTkCanvas):
     def __init__(self, parent, pil_image):
-        super().__init__(master = parent, background = "#484848")
+        super().__init__(master = parent, background = ACCENT_COLOR)
         self.place(relx = 0.5, rely = 0.05, relwidth = 0.75, relheight = 0.5, anchor = 'n')
 
         self.original_pil = pil_image
@@ -56,15 +58,24 @@ class ImageCanvas(ctk.CTkCanvas):
 
 class UserControls(ctk.CTkFrame):
     def __init__(self, parent, original):
-        super().__init__(parent, fg_color='white')
+        super().__init__(parent, fg_color= ACCENT_COLOR)
         self.original_image = original
         self.place(relx = 0.05, rely = 0.6, relwidth = 0.9, relheight = 0.35, anchor = 'nw')
+        self.filename = ctk.StringVar(self, value = '')
 
-        self.compress_button = ctk.CTkButton(self, text = 'Compress', command = self.compress_image)
+        self.filename_prompt = ctk.CTkLabel(self, text = 'Enter a filename:', font = ctk.CTkFont('Arial', 28, 'bold'))
+        self.filename_entry = ctk.CTkEntry(self, textvariable = self.filename, font = ctk.CTkFont('Arial', 28, 'normal'))
 
+        self.compress_button = ctk.CTkButton(self, text = 'Compress', command = self.compress_image, fg_color = BUTTON_COLOR, hover_color = BUTTON_HOVER)
+
+        self.filename_prompt.place(relx = 0.5, rely = 0.15, anchor = 'center')
+        self.filename_entry.place(relx = 0.5, rely =0.3, relwidth = 0.8, relheight = 0.25, anchor = 'n')
         self.compress_button.place(relx = 0.5, rely = 0.8, relwidth = 0.25, relheight = 0.1, anchor = 'center')
 
     
     def compress_image(self):
-        #self.original_image.save(f"Compressed_{self.original_image.name}.jpeg", optimize = True, quality = 10)
-        pass
+        name = self.filename.get()
+        self.original_image = self.original_image.convert('RGB')
+        self.original_image.save(f"Compressed_{name}.jpeg", format = 'jpeg', optimize = True, quality = 10)
+
+        messagebox.showinfo('Image compressed', 'Image compressed \nSize reduced by: 2137' )

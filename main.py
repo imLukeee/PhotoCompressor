@@ -1,15 +1,13 @@
 import customtkinter as ctk
 from ui import Initiate_App
+from settings import BG_COLOR
 
 class App(ctk.CTk):
     def __init__(self):
-        super().__init__(fg_color = "#1E1E1F")
+        super().__init__(fg_color = BG_COLOR)
 
         APP_SIZE = (800, 800)
         MIN_SIZE = (600,600)
-
-        #fonts
-        import_image_button_font = ctk.CTkFont('Arial', 24, 'bold')
 
         #General window setup
         screen_width = self.winfo_screenwidth()
@@ -28,7 +26,7 @@ class App(ctk.CTk):
         self.grid_rowconfigure((0,1,2), uniform = 'a')
 
         #initiate ui and fucntionality
-        Initiate_App(self, font = import_image_button_font)
+        Initiate_App(self)
 
         #run
         self.mainloop()
