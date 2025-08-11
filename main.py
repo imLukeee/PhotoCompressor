@@ -32,5 +32,12 @@ class App(ctk.CTk):
         self.mainloop()
 
 
+    def restart_app(self):
+        for widget in self.winfo_children():
+            widget.destroy()
+
+        Initiate_App(self)
+
+
 if __name__ == "__main__":
     App()

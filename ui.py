@@ -2,12 +2,12 @@ import customtkinter as ctk
 from PIL import Image, ImageTk
 from tkinter import filedialog, messagebox
 from settings import *
-import os
+import os, subprocess, platform
 
 
 class Initiate_App(ctk.CTkButton):
     def __init__(self, parent):
-        super().__init__(master = parent, text = 'Select Image', font = ctk.CTkFont('Arial', 24, 'bold'), command = self.import_image, fg_color = BUTTON_COLOR, hover_color = BUTTON_HOVER)
+        super().__init__(master = parent, text = 'Select Image', font = ctk.CTkFont('Arial', 24, 'bold'), command = self.import_image, fg_color = BUTTON_COLOR, hover_color = BUTTON_HOVER, corner_radius = 12)
         self.place(relx = 0.5, rely = 0.5, relwidth = 0.5, relheight = 0.075, anchor = 'center')
         self.main_window = parent
 
@@ -68,31 +68,68 @@ class ImageCanvas(ctk.CTkCanvas):
 class UserControls(ctk.CTkFrame):
     def __init__(self, parent, original, original_size):
         super().__init__(parent, fg_color= ACCENT_COLOR)
+        self.main_window = parent
+
+        self.ArialBold = ctk.CTkFont('Arial', 28, 'bold')
+        self.ArialRegular = ctk.CTkFont('Arial', 28, 'normal')
+        self.ButtonFont = ctk.CTkFont('Arial', 18, 'bold')
+
         self.original_image = original
         self.orignal_size = original_size
         self.place(relx = 0.05, rely = 0.6, relwidth = 0.9, relheight = 0.35, anchor = 'nw')
+
         self.filename = ctk.StringVar(self, value = '')
+        self.quality = ctk.StringVar(self, value = QUALITY_LIST[0])
 
-        self.filename_prompt = ctk.CTkLabel(self, text = 'Enter a filename:', font = ctk.CTkFont('Arial', 28, 'bold'))
-        self.filename_entry = ctk.CTkEntry(self, textvariable = self.filename, font = ctk.CTkFont('Arial', 28, 'normal'))
+        self.filename_label = ctk.CTkLabel(self, text = 'Enter a filename:', font = self.ArialBold)
+        self.filename_entry = ctk.CTkEntry(self, textvariable = self.filename, font = self.ArialRegular, corner_radius = 12)
 
-        self.compress_button = ctk.CTkButton(self, text = 'Compress', command = self.compress_image, fg_color = BUTTON_COLOR, hover_color = BUTTON_HOVER)
+        self.quality_label = ctk.CTkLabel(self, text = 'Quality:', font = self.ArialBold)
+        self.quality_select = ctk.CTkOptionMenu(self, values = QUALITY_LIST, variable = self.quality, fg_color= BUTTON_COLOR, button_color = BUTTON_COLOR, button_hover_color = BUTTON_HOVER, dropdown_hover_color = BUTTON_HOVER, font = self.ArialRegular, corner_radius = 12)
 
-        self.filename_prompt.place(relx = 0.5, rely = 0.15, anchor = 'center')
-        self.filename_entry.place(relx = 0.5, rely =0.3, relwidth = 0.8, relheight = 0.25, anchor = 'n')
-        self.compress_button.place(relx = 0.5, rely = 0.8, relwidth = 0.25, relheight = 0.1, anchor = 'center')
+        self.compress_button = ctk.CTkButton(self, text = 'Compress', font = self.ButtonFont, command = self.compress_image, fg_color = BUTTON_COLOR, hover_color = BUTTON_HOVER, corner_radius = 12)
+
+        self.filename_label.place(relx = 0.5, rely = 0.1, anchor = 'center')
+        self.filename_entry.place(relx = 0.5, rely =0.2, relwidth = 0.8, relheight = 0.2, anchor = 'n')
+        self.quality_label.place(relx = 0.3, rely = 0.6, anchor = 'center')
+        self.quality_select.place(relx = 0.6, rely = 0.6, relwidth = 0.4, relheight = 0.2, anchor = 'center')
+        self.compress_button.place(relx = 0.5, rely = 0.85, relwidth = 0.25, relheight = 0.1, anchor = 'center')
+
+
+    def reset_app(self):
+        self.main_window.restart_app()
 
     
+    def open_save_folder(self):
+        system = platform.system()
+    
+        if system == "Windows":
+            subprocess.run(f'explorer /select,"{self.filename}"')
+        elif system == "Darwin": #macOS
+            subprocess.run(["open", "-R", self.filename])
+        elif system == "Linux":
+            subprocess.run(["xdg-open", os.path.dirname(self.filename)])
+        else:
+            raise NotImplementedError(f"OS {system} not supported")
+
+
     def compress_image(self):
-        name = self.filename.get()
-        filename = f'Compressed_{name}.jpeg'
+        quality = QUALITY_DICT[self.quality.get()]
+        self.filename = f'Compressed_{self.filename.get()}.jpeg'
+
         self.original_image = self.original_image.convert('RGB')
-        self.original_image.save(filename, format = 'jpeg', optimize = True, quality = 10)
+        self.original_image.save(self.filename, format = 'jpeg', optimize = True, quality = quality)
 
         #get compressed image size in kilobytes
-        self.compressed_size = os.stat(filename).st_size / 1000
+        self.compressed_size = os.stat(self.filename).st_size / 1000
 
         reduced_size = round(self.orignal_size - self.compressed_size, 2)
         percentage = round((self.orignal_size - self.compressed_size)/self.orignal_size * 100, 2)
 
-        messagebox.showinfo('Image compressed', f'Image compressed \nSize reduced by {percentage}% ({reduced_size} kB) 🤩' )
+        ans = messagebox.askquestion('Compression Finished', f'Image compressed\nSize reduced by {percentage}% ({reduced_size} kB) 🤩\n\nCompress another image?')
+        
+        if ans == 'yes':
+            self.reset_app()
+        else:
+            self.open_save_folder()
+            self.main_window.destroy()
