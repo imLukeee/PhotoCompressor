@@ -1,7 +1,8 @@
 import customtkinter as ctk
 from PIL import Image, ImageTk
 from tkinter import filedialog, messagebox
-from settings import *
+from colors import *
+from settings_window import *
 import os, subprocess, platform
 
 
@@ -133,3 +134,17 @@ class UserControls(ctk.CTkFrame):
         else:
             self.open_save_folder()
             self.main_window.destroy()
+
+    
+class SettingsMenu(ctk.CTkButton):
+    def __init__(self, parent, settings_var):
+        super().__init__(master = parent, text = '⚙︎', font = ctk.CTkFont('Arial', 24), fg_color = 'transparent', hover_color = MENU_BUTTON_HOVER, corner_radius = 12, command = self.open_settings)
+        self.place(relx = 0.99, rely = 0.01, relwidth = 0.05, relheight = 0.05, anchor = 'ne')
+        self.settings = settings_var
+
+
+    def open_settings(self):
+        if self.settings is None or not self.settings.winfo_exists():
+            self.settings = SettingsWindow(self)  # create window if its None or destroyed
+        else:
+            self.settings.focus()  # if window exists focus it

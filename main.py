@@ -1,6 +1,6 @@
 import customtkinter as ctk
-from ui import Initiate_App
-from settings import BG_COLOR
+from ui import Initiate_App, SettingsMenu
+from colors import BG_COLOR
 
 class App(ctk.CTk):
     def __init__(self):
@@ -21,12 +21,14 @@ class App(ctk.CTk):
         self.geometry(f'{APP_SIZE[0]}x{APP_SIZE[1]}+{x}+{y}')
         self.minsize(MIN_SIZE[0], MIN_SIZE[1])
 
+        self.settings = None
+
         #create grid layout
         self.grid_columnconfigure((0,1,2), uniform = 'a')
         self.grid_rowconfigure((0,1,2), uniform = 'a')
 
         #initiate ui and fucntionality
-        Initiate_App(self)
+        self.run_app()
 
         #run
         self.mainloop()
@@ -35,8 +37,12 @@ class App(ctk.CTk):
     def restart_app(self):
         for widget in self.winfo_children():
             widget.destroy()
+        self.run_app()
 
+
+    def run_app(self):
         Initiate_App(self)
+        SettingsMenu(self, self.settings)
 
 
 if __name__ == "__main__":
