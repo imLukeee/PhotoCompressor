@@ -18,6 +18,8 @@ class SettingsWindow(ctk.CTkToplevel):
 
         filename = 'settings.csv'
 
+        #continue - get settings to main app and get things user change to csv
+
         with open (filename, 'w') as settings:
             csvwrtiter = csv.writer(settings)
             csvwrtiter.writerow([self.save_dir, self.color_scheme, self.default_compression])
