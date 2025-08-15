@@ -3,14 +3,16 @@ from PIL import Image, ImageTk
 from tkinter import filedialog, messagebox
 from colors import *
 from settings_window import *
-import os, subprocess, platform
+import os, subprocess, platform, csv
 
 
-class Initiate_App(ctk.CTkButton):
+class Initiate_Image_Import(ctk.CTkButton):
     def __init__(self, parent):
         super().__init__(master = parent, text = 'Select Image', font = ctk.CTkFont('Arial', 24, 'bold'), command = self.import_image, fg_color = BUTTON_COLOR, hover_color = BUTTON_HOVER, corner_radius = 12)
         self.place(relx = 0.5, rely = 0.5, relwidth = 0.5, relheight = 0.075, anchor = 'center')
         self.main_window = parent
+
+        self.get_settings_from_csv()
 
     def import_image(self):
         filepath = filedialog.askopenfilename()
@@ -26,7 +28,23 @@ class Initiate_App(ctk.CTkButton):
 
         #display image preview and user controls
         self.image_preview = ImageCanvas(self.main_window, self.original_image)
-        self.controls = UserControls(self.main_window, self.original_image, self.original_size)
+        self.controls = UserControls(self.main_window, self.original_image, self.original_size, self.save_dir, self.default_compression)
+
+    
+    def get_settings_from_csv(self):
+        settings_filename = SETTINGS_FILENAME
+
+        with open(settings_filename, 'r') as settings_file:
+            csvreader = csv.reader(settings_file)
+
+            for row in csvreader:
+                saved = row
+
+        self.save_dir = saved[0]
+        self.color_scheme = saved[1]
+        self.default_compression = saved[2]
+
+        ctk.set_appearance_mode(self.color_scheme)
 
 
 class ImageCanvas(ctk.CTkCanvas):
@@ -67,7 +85,7 @@ class ImageCanvas(ctk.CTkCanvas):
 
 
 class UserControls(ctk.CTkFrame):
-    def __init__(self, parent, original, original_size):
+    def __init__(self, parent, original, original_size, save_path, default_compression):
         super().__init__(parent, fg_color= ACCENT_COLOR)
         self.main_window = parent
 
@@ -80,7 +98,7 @@ class UserControls(ctk.CTkFrame):
         self.place(relx = 0.05, rely = 0.6, relwidth = 0.9, relheight = 0.35, anchor = 'nw')
 
         self.filename = ctk.StringVar(self, value = '')
-        self.quality = ctk.StringVar(self, value = QUALITY_LIST[0])
+        self.quality = ctk.StringVar(self, value = default_compression)
 
         self.filename_label = ctk.CTkLabel(self, text = 'Enter a filename:', font = self.ArialBold)
         self.filename_entry = ctk.CTkEntry(self, textvariable = self.filename, font = self.ArialRegular, corner_radius = 12)
@@ -88,7 +106,7 @@ class UserControls(ctk.CTkFrame):
         self.quality_label = ctk.CTkLabel(self, text = 'Quality:', font = self.ArialBold)
         self.quality_select = ctk.CTkOptionMenu(self, values = QUALITY_LIST, variable = self.quality, fg_color= BUTTON_COLOR, button_color = BUTTON_COLOR, button_hover_color = BUTTON_HOVER, dropdown_hover_color = BUTTON_HOVER, font = self.ArialRegular, corner_radius = 12)
 
-        self.compress_button = ctk.CTkButton(self, text = 'Compress', font = self.ButtonFont, command = self.compress_image, fg_color = BUTTON_COLOR, hover_color = BUTTON_HOVER, corner_radius = 12)
+        self.compress_button = ctk.CTkButton(self, text = 'Compress', font = self.ButtonFont, command = lambda: self.compress_image(save_path), fg_color = BUTTON_COLOR, hover_color = BUTTON_HOVER, corner_radius = 12)
 
         self.filename_label.place(relx = 0.5, rely = 0.1, anchor = 'center')
         self.filename_entry.place(relx = 0.5, rely =0.2, relwidth = 0.8, relheight = 0.2, anchor = 'n')
@@ -114,15 +132,19 @@ class UserControls(ctk.CTkFrame):
             raise NotImplementedError(f"OS {system} not supported")
 
 
-    def compress_image(self):
+    def compress_image(self, save_path):
         quality = QUALITY_DICT[self.quality.get()]
         self.filename = f'Compressed_{self.filename.get()}.jpeg'
 
+        #ensure save dir exists
+        os.makedirs(save_path, exist_ok = True)
+
         self.original_image = self.original_image.convert('RGB')
-        self.original_image.save(self.filename, format = 'jpeg', optimize = True, quality = quality)
+        full_path = os.path.join(save_path, self.filename)
+        self.original_image.save(full_path, format = 'jpeg', optimize = True, quality = quality)
 
         #get compressed image size in kilobytes
-        self.compressed_size = os.stat(self.filename).st_size / 1000
+        self.compressed_size = os.stat(full_path).st_size / 1000
 
         reduced_size = round(self.orignal_size - self.compressed_size, 2)
         percentage = round((self.orignal_size - self.compressed_size)/self.orignal_size * 100, 2)

@@ -1,5 +1,5 @@
 import customtkinter as ctk
-from ui import Initiate_App, SettingsMenu
+from ui import Initiate_Image_Import, SettingsMenu
 from colors import BG_COLOR
 
 class App(ctk.CTk):
@@ -41,7 +41,7 @@ class App(ctk.CTk):
 
 
     def run_app(self):
-        Initiate_App(self)
+        Initiate_Image_Import(self)
         SettingsMenu(self, self.settings)
 
 
