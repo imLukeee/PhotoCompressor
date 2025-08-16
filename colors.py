@@ -14,3 +14,5 @@ QUALITY_DICT = {'Lowest size': 10,
 QUALITY_LIST = ['Lowest size', 'Balanced', 'Highest quality']
 
 SETTINGS_FILENAME = 'settings.csv'
+
+SETTINGS_DEAFULTS = ['./CompressedImages', 'Dark', 'Lowest size']

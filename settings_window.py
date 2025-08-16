@@ -8,7 +8,7 @@ import csv
 
 
 class SettingsWindow(ctk.CTkToplevel):
-    def __init__(self, parent):
+    def __init__(self, parent, save_dir, color_scheme, default_compression):
         super().__init__(parent, fg_color = ACCENT_COLOR)
         self.geometry('600x800')
         self.title('Settings')
@@ -16,9 +16,9 @@ class SettingsWindow(ctk.CTkToplevel):
 
         self.setting_title_font = ctk.CTkFont('Arail', 24, 'bold')
 
-        self.save_dir_path = ctk.StringVar(self, value = './CompressedImages/')
-        self.color_scheme = ctk.StringVar(self, 'Dark')
-        self.default_compression = ctk.StringVar(self, QUALITY_LIST[0])
+        self.save_dir_path = ctk.StringVar(self, value = save_dir)
+        self.color_scheme = ctk.StringVar(self, value = color_scheme)
+        self.default_compression = ctk.StringVar(self, value = default_compression)
  
         self.create_settings_ui()
 
@@ -27,7 +27,25 @@ class SettingsWindow(ctk.CTkToplevel):
         SaveFileSelector(self, self.setting_title_font, self.save_dir_path)
         ColorSchemeSelector(self, self.setting_title_font, self.color_scheme)
         DefaultCompressionSelector(self, self.setting_title_font, self.default_compression)
-        ConfirmSettings(self)
+        ConfirmSettings(self, self.save_dir_path, self.color_scheme, self.default_compression)
+
+
+class SaveFileSelector(ctk.CTkFrame):
+    def __init__(self, parent, title_font, save_location_var):
+        super().__init__(master = parent)
+        self.pack(side = 'top', expand = True, fill = 'both')
+        self.save_location = save_location_var
+
+        self.setting_title = ctk.CTkLabel(self, text = 'Save directory', font = title_font)
+        self.current_location_label = ctk.CTkLabel(self, textvariable = save_location_var, bg_color = ACCENT_COLOR, corner_radius = 12, anchor = 'w', justify = 'left')
+        self.change_save_dir_button = ctk.CTkButton(self.current_location_label, text = '...', fg_color = BUTTON_COLOR, command = self.select_save_folder)
+
+
+        self.setting_title.place(relx = 0.05, rely = 0.1, anchor = 'nw')
+        self.current_location_label.place(relx = 0.05, rely = 0.4, relwidth = 0.9, relheight = 0.25, anchor = 'nw')
+        
+        #inside current_loaction_label
+        self.change_save_dir_button.place(relx = 1, rely = 0, relwidth = 0.15, relheight = 1, anchor = 'ne')
 
 
     def select_save_folder(self):
@@ -36,30 +54,7 @@ class SettingsWindow(ctk.CTkToplevel):
         if not path:
             path = './CompressedImages/'
 
-    
-    def save_settings_to_file(self):
-        filename = SETTINGS_FILENAME
-
-        with open (filename, 'w') as settings:
-            csvwrtiter = csv.writer(settings)
-            csvwrtiter.writerow([self.save_dir.get(), self.color_scheme.get(), self.default_compression.get()])
-
-
-class SaveFileSelector(ctk.CTkFrame):
-    def __init__(self, parent, title_font, save_location_var):
-        super().__init__(master = parent)
-        self.pack(side = 'top', expand = True, fill = 'both')
-
-        self.setting_title = ctk.CTkLabel(self, text = 'Save directory', font = title_font)
-        self.current_location_label = ctk.CTkLabel(self, textvariable = save_location_var, bg_color = ACCENT_COLOR, corner_radius = 12, anchor = 'w', justify = 'left')
-        self.change_save_dir_button = ctk.CTkButton(self.current_location_label, text = '...', fg_color = BUTTON_COLOR)
-
-
-        self.setting_title.place(relx = 0.05, rely = 0.1, anchor = 'nw')
-        self.current_location_label.place(relx = 0.05, rely = 0.4, relwidth = 0.9, relheight = 0.25, anchor = 'nw')
-        
-        #inside current_loaction_label
-        self.change_save_dir_button.place(relx = 1, rely = 0, relwidth = 0.15, relheight = 1, anchor = 'ne')
+        self.save_location.set(path)
 
 
 class ColorSchemeSelector(ctk.CTkFrame):
@@ -70,7 +65,7 @@ class ColorSchemeSelector(ctk.CTkFrame):
         self.default_color_mode_var = ctk.StringVar(value = 'Dark')
 
         self.setting_title = ctk.CTkLabel(self, text = 'Apperance', font = title_font)
-        self.color_mode_toggle = ctk.CTkSegmentedButton(self, variable = color_scheme_var, values = ['Light', 'Dark'],corner_radius = 12)
+        self.color_mode_toggle = ctk.CTkSegmentedButton(self, variable = color_scheme_var, values = ['Light', 'Dark'], corner_radius = 12)
 
 
         self.setting_title.place(relx = 0.05, rely = 0.05, anchor = 'nw')
@@ -93,18 +88,37 @@ class DefaultCompressionSelector(ctk.CTkFrame):
 
 
 class ConfirmSettings(ctk.CTkFrame):
-    def __init__(self, parent):
+    def __init__(self, parent, save_dir_var, color_scheme_var, default_compression_var):
         super().__init__(master = parent, fg_color = ACCENT_COLOR)
         self.pack(side = 'bottom', pady = 20)
+
+        self.save_dir_path = save_dir_var
+        self.color_scheme = color_scheme_var
+        self.default_compression = default_compression_var
+
         self.rowconfigure(0)
         self.columnconfigure((0,1,2), uniform = 'a', weight = 1)
 
         self.cancel_button = ConfirmSettingsButton(self, 'Cancel', 'toadd', 0)
-        self.apply_button = ConfirmSettingsButton(self, 'Apply', 'toadd' , 1)
-        self.reset_button = ConfirmSettingsButton(self, 'Reset', 'toadd', 2)
+        self.apply_button = ConfirmSettingsButton(self, 'Apply', self.save_settings_to_file, 1)
+        self.reset_button = ConfirmSettingsButton(self, 'Reset', self.reset_settings, 2)
+
+
+    def save_settings_to_file(self):
+        filename = SETTINGS_FILENAME
+
+        with open (filename, 'w') as settings:
+            csvwrtiter = csv.writer(settings)
+            csvwrtiter.writerow([self.save_dir_path.get(), self.color_scheme.get(), self.default_compression.get()])
+
+
+    def reset_settings(self):
+        self.save_dir_path.set(SETTINGS_DEAFULTS[0])
+        self.color_scheme.set(SETTINGS_DEAFULTS[1])
+        self.default_compression.set(SETTINGS_DEAFULTS[2])
         
 
 class ConfirmSettingsButton(ctk.CTkButton):
     def __init__(self, parent, text, command, column):
-        super().__init__(master = parent, text = text, fg_color = BUTTON_COLOR, hover_color = BUTTON_HOVER, corner_radius = 12, height = 50)
+        super().__init__(master = parent, text = text, command = command, fg_color = BUTTON_COLOR, hover_color = BUTTON_HOVER, corner_radius = 12, height = 50)
         self.grid(row = 0, column = column, sticky = 'nsew', padx = 10, pady = 10)

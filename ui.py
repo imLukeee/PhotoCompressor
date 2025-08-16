@@ -7,12 +7,14 @@ import os, subprocess, platform, csv
 
 
 class Initiate_Image_Import(ctk.CTkButton):
-    def __init__(self, parent):
+    def __init__(self, parent, save_dir, default_compression):
         super().__init__(master = parent, text = 'Select Image', font = ctk.CTkFont('Arial', 24, 'bold'), command = self.import_image, fg_color = BUTTON_COLOR, hover_color = BUTTON_HOVER, corner_radius = 12)
         self.place(relx = 0.5, rely = 0.5, relwidth = 0.5, relheight = 0.075, anchor = 'center')
         self.main_window = parent
 
-        self.get_settings_from_csv()
+        self.save_dir = save_dir
+        self.default_compression = default_compression
+
 
     def import_image(self):
         filepath = filedialog.askopenfilename()
@@ -31,20 +33,7 @@ class Initiate_Image_Import(ctk.CTkButton):
         self.controls = UserControls(self.main_window, self.original_image, self.original_size, self.save_dir, self.default_compression)
 
     
-    def get_settings_from_csv(self):
-        settings_filename = SETTINGS_FILENAME
 
-        with open(settings_filename, 'r') as settings_file:
-            csvreader = csv.reader(settings_file)
-
-            for row in csvreader:
-                saved = row
-
-        self.save_dir = saved[0]
-        self.color_scheme = saved[1]
-        self.default_compression = saved[2]
-
-        ctk.set_appearance_mode(self.color_scheme)
 
 
 class ImageCanvas(ctk.CTkCanvas):
@@ -123,11 +112,11 @@ class UserControls(ctk.CTkFrame):
         system = platform.system()
     
         if system == "Windows":
-            subprocess.run(f'explorer /select,"{self.filename}"')
+            subprocess.run(f'explorer /select,"{self.full_path}"')
         elif system == "Darwin": #macOS
-            subprocess.run(["open", "-R", self.filename])
+            subprocess.run(["open", "-R", self.full_path])
         elif system == "Linux":
-            subprocess.run(["xdg-open", os.path.dirname(self.filename)])
+            subprocess.run(["xdg-open", os.path.dirname(self.full_path)])
         else:
             raise NotImplementedError(f"OS {system} not supported")
 
@@ -140,11 +129,11 @@ class UserControls(ctk.CTkFrame):
         os.makedirs(save_path, exist_ok = True)
 
         self.original_image = self.original_image.convert('RGB')
-        full_path = os.path.join(save_path, self.filename)
-        self.original_image.save(full_path, format = 'jpeg', optimize = True, quality = quality)
+        self.full_path = os.path.join(save_path, self.filename)
+        self.original_image.save(self.full_path, format = 'jpeg', optimize = True, quality = quality)
 
         #get compressed image size in kilobytes
-        self.compressed_size = os.stat(full_path).st_size / 1000
+        self.compressed_size = os.stat(self.full_path).st_size / 1000
 
         reduced_size = round(self.orignal_size - self.compressed_size, 2)
         percentage = round((self.orignal_size - self.compressed_size)/self.orignal_size * 100, 2)
@@ -159,14 +148,18 @@ class UserControls(ctk.CTkFrame):
 
     
 class SettingsMenu(ctk.CTkButton):
-    def __init__(self, parent, settings_var):
+    def __init__(self, parent, settings_var, save_dir, color_scheme, default_compression):
         super().__init__(master = parent, text = '⚙︎', font = ctk.CTkFont('Arial', 24), fg_color = 'transparent', hover_color = MENU_BUTTON_HOVER, corner_radius = 12, command = self.open_settings)
         self.place(relx = 0.99, rely = 0.01, relwidth = 0.05, relheight = 0.05, anchor = 'ne')
         self.settings = settings_var
+        
+        self.save_dir_csv = save_dir
+        self.color_scheme_csv = color_scheme
+        self.default_compression_csv = default_compression
 
 
     def open_settings(self):
         if self.settings is None or not self.settings.winfo_exists():
-            self.settings = SettingsWindow(self)  # create window if its None or destroyed
+            self.settings = SettingsWindow(self, self.save_dir_csv, self.color_scheme_csv, self.default_compression_csv)  # create window if its None or destroyed
         else:
             self.settings.focus()  # if window exists focus it
