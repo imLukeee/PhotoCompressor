@@ -30,6 +30,11 @@ class SettingsWindow(ctk.CTkToplevel):
         ConfirmSettings(self, self.save_dir_path, self.color_scheme, self.default_compression)
 
 
+    def close_window(self):
+        self.destroy()
+        self.update()
+
+
 class SaveFileSelector(ctk.CTkFrame):
     def __init__(self, parent, title_font, save_location_var):
         super().__init__(master = parent)
@@ -99,7 +104,7 @@ class ConfirmSettings(ctk.CTkFrame):
         self.rowconfigure(0)
         self.columnconfigure((0,1,2), uniform = 'a', weight = 1)
 
-        self.cancel_button = ConfirmSettingsButton(self, 'Cancel', 'toadd', 0)
+        self.cancel_button = ConfirmSettingsButton(self, 'Cancel', parent.close_window, 0)
         self.apply_button = ConfirmSettingsButton(self, 'Apply', self.save_settings_to_file, 1)
         self.reset_button = ConfirmSettingsButton(self, 'Reset', self.reset_settings, 2)
 
