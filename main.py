@@ -13,7 +13,6 @@ class App(ctk.CTk):
         #General window setup
         screen_width = self.winfo_screenwidth()
         screen_height = self.winfo_screenheight()
-
         x = screen_width // 2 - (APP_SIZE[0] // 2)
         y = screen_height // 2 - (APP_SIZE[1] // 2)
 
@@ -26,9 +25,13 @@ class App(ctk.CTk):
         self.grid_columnconfigure((0,1,2), uniform = 'a')
         self.grid_rowconfigure((0,1,2), uniform = 'a')
 
-        self.settings = None #settings window variable for when openend
+        self.settings = self.load_settings()
 
-        #initiate ui and fucntionality
+        #trace changes to theme color 
+        self.settings['color_scheme'].trace_add('write', self.apply_theme)
+        self.apply_theme()
+
+        self.settings_window = None #settings window variable for when openend
         self.run_app()
 
         #run
@@ -41,29 +44,28 @@ class App(ctk.CTk):
         self.run_app()
 
 
-    def get_settings_from_csv(self):
-        settings_filename = SETTINGS_FILENAME
+    def load_settings(self):
+        try:
+            with open(SETTINGS_FILENAME, 'r') as f:
+                reader = csv.reader(f)
+                row = next(reader, SETTINGS_DEAFULTS)
+        except FileNotFoundError:
+            row = SETTINGS_DEAFULTS
 
-        with open(settings_filename, 'r') as settings_file:
-            csvreader = csv.reader(settings_file)
-            rows = list(csvreader)
-            
-            if len(rows) == 0:
-                saved = SETTINGS_DEAFULTS
-            else:
-                saved = rows[0]
-
-        self.save_dir = saved[0]
-        self.color_scheme = saved[1]
-        self.default_compression = saved[2]
-
-        ctk.set_appearance_mode(self.color_scheme)
+        return {
+            'save_dir': ctk.StringVar(self, value = row[0]),
+            'color_scheme': ctk.StringVar(self, value = row[1]),
+            'compression': ctk.StringVar(self, value = row[2])
+        }
+    
+    def apply_theme(self, *args):
+        ctk.set_appearance_mode(self.settings['color_scheme'].get())
 
 
     def run_app(self):
-        self.get_settings_from_csv()
-        Initiate_Image_Import(self, self.save_dir, self.default_compression)
-        SettingsMenu(self, self.settings, self.save_dir, self.color_scheme, self.default_compression)
+        self.load_settings()
+        Initiate_Image_Import(self, self.settings['save_dir'], self.settings['compression'])
+        SettingsMenu(self, self.settings_window, self.settings['save_dir'], self.settings['color_scheme'], self.settings['compression'])
 
 
 if __name__ == "__main__":

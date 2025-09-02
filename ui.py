@@ -7,13 +7,13 @@ import os, subprocess, platform, csv
 
 
 class Initiate_Image_Import(ctk.CTkButton):
-    def __init__(self, parent, save_dir, default_compression):
+    def __init__(self, parent, save_dir_var, default_compression_var):
         super().__init__(master = parent, text = 'Select Image', font = ctk.CTkFont('Arial', 24, 'bold'), command = self.import_image, fg_color = BUTTON_COLOR, hover_color = BUTTON_HOVER, corner_radius = 12)
         self.place(relx = 0.5, rely = 0.5, relwidth = 0.5, relheight = 0.075, anchor = 'center')
         self.main_window = parent
 
-        self.save_dir = save_dir
-        self.default_compression = default_compression
+        self.save_dir = save_dir_var
+        self.default_compression = default_compression_var
 
 
     def import_image(self):
@@ -74,7 +74,7 @@ class ImageCanvas(ctk.CTkCanvas):
 
 
 class UserControls(ctk.CTkFrame):
-    def __init__(self, parent, original, original_size, save_path, default_compression):
+    def __init__(self, parent, original, original_size, save_path_var, compression_var):
         super().__init__(parent, fg_color= ACCENT_COLOR)
         self.main_window = parent
 
@@ -87,7 +87,8 @@ class UserControls(ctk.CTkFrame):
         self.place(relx = 0.05, rely = 0.6, relwidth = 0.9, relheight = 0.35, anchor = 'nw')
 
         self.filename = ctk.StringVar(self, value = '')
-        self.quality = ctk.StringVar(self, value = default_compression)
+        self.save_path = save_path_var
+        self.quality = compression_var
 
         self.filename_label = ctk.CTkLabel(self, text = 'Enter a filename:', font = self.ArialBold)
         self.filename_entry = ctk.CTkEntry(self, textvariable = self.filename, font = self.ArialRegular, corner_radius = 12)
@@ -95,7 +96,7 @@ class UserControls(ctk.CTkFrame):
         self.quality_label = ctk.CTkLabel(self, text = 'Quality:', font = self.ArialBold)
         self.quality_select = ctk.CTkOptionMenu(self, values = QUALITY_LIST, variable = self.quality, fg_color= BUTTON_COLOR, button_color = BUTTON_COLOR, button_hover_color = BUTTON_HOVER, dropdown_hover_color = BUTTON_HOVER, font = self.ArialRegular, corner_radius = 12)
 
-        self.compress_button = ctk.CTkButton(self, text = 'Compress', font = self.ButtonFont, command = lambda: self.compress_image(save_path), fg_color = BUTTON_COLOR, hover_color = BUTTON_HOVER, corner_radius = 12)
+        self.compress_button = ctk.CTkButton(self, text = 'Compress', font = self.ButtonFont, command = self.compress_image, fg_color = BUTTON_COLOR, hover_color = BUTTON_HOVER, corner_radius = 12)
 
         self.filename_label.place(relx = 0.5, rely = 0.1, anchor = 'center')
         self.filename_entry.place(relx = 0.5, rely =0.2, relwidth = 0.8, relheight = 0.2, anchor = 'n')
@@ -121,9 +122,11 @@ class UserControls(ctk.CTkFrame):
             raise NotImplementedError(f"OS {system} not supported")
 
 
-    def compress_image(self, save_path):
+    def compress_image(self):
         quality = QUALITY_DICT[self.quality.get()]
         self.filename = f'Compressed_{self.filename.get()}.jpeg'
+
+        save_path = self.save_path.get()
 
         #ensure save dir exists
         os.makedirs(save_path, exist_ok = True)
@@ -148,18 +151,20 @@ class UserControls(ctk.CTkFrame):
 
     
 class SettingsMenu(ctk.CTkButton):
-    def __init__(self, parent, settings_var, save_dir, color_scheme, default_compression):
+    def __init__(self, parent, settings_var, save_dir_var, color_scheme_var, default_compression_var):
         super().__init__(master = parent, text = '⚙︎', font = ctk.CTkFont('Arial', 24), fg_color = 'transparent', hover_color = MENU_BUTTON_HOVER, corner_radius = 12, command = self.open_settings)
         self.place(relx = 0.99, rely = 0.01, relwidth = 0.05, relheight = 0.05, anchor = 'ne')
-        self.settings = settings_var
         
-        self.save_dir_csv = save_dir
-        self.color_scheme_csv = color_scheme
-        self.default_compression_csv = default_compression
+        self.settings_window = settings_var
+        self.main_window = parent
+        
+        self.save_dir_csv = save_dir_var
+        self.color_scheme_csv = color_scheme_var
+        self.default_compression_csv = default_compression_var
 
 
     def open_settings(self):
-        if self.settings is None or not self.settings.winfo_exists():
-            self.settings = SettingsWindow(self, self.save_dir_csv, self.color_scheme_csv, self.default_compression_csv)  # create window if its None or destroyed
+        if self.settings_window is None or not self.settings_window.winfo_exists():
+            self.settings_window = SettingsWindow(self, self.save_dir_csv, self.color_scheme_csv, self.default_compression_csv, self.main_window)  # create window if its None or destroyed
         else:
-            self.settings.focus()  # if window exists focus it
+            self.settings_window.focus()  # if window exists focus it

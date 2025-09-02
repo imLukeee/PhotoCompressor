@@ -1,24 +1,25 @@
 import customtkinter as ctk
 from tkinter import filedialog
 from colors import *
-import csv
+import csv, os
 
 #csv structure:
 #save_directory ; light/dark mode ; default compression quality
 
 
 class SettingsWindow(ctk.CTkToplevel):
-    def __init__(self, parent, save_dir, color_scheme, default_compression):
+    def __init__(self, parent, save_dir_var, color_scheme_var, default_compression_var, main_window):
         super().__init__(parent, fg_color = ACCENT_COLOR)
         self.geometry('600x800')
         self.title('Settings')
         self.resizable(False, False)
+        self.main_window = main_window
 
         self.setting_title_font = ctk.CTkFont('Arail', 24, 'bold')
 
-        self.save_dir_path = ctk.StringVar(self, value = save_dir)
-        self.color_scheme = ctk.StringVar(self, value = color_scheme)
-        self.default_compression = ctk.StringVar(self, value = default_compression)
+        self.save_dir_path = save_dir_var
+        self.color_scheme = color_scheme_var
+        self.default_compression = default_compression_var
  
         self.create_settings_ui()
 
@@ -28,11 +29,6 @@ class SettingsWindow(ctk.CTkToplevel):
         ColorSchemeSelector(self, self.setting_title_font, self.color_scheme)
         DefaultCompressionSelector(self, self.setting_title_font, self.default_compression)
         ConfirmSettings(self, self.save_dir_path, self.color_scheme, self.default_compression)
-
-
-    def close_window(self):
-        self.destroy()
-        self.update()
 
 
 class SaveFileSelector(ctk.CTkFrame):
@@ -82,11 +78,8 @@ class DefaultCompressionSelector(ctk.CTkFrame):
         super().__init__(master = parent)
         self.pack(side = 'top', expand = True, fill = 'both')
 
-        self.default_compression_mode = ctk.StringVar(value = QUALITY_LIST[0])
-
         self.setting_title = ctk.CTkLabel(self, text = 'Default Compression', font = title_font)
         self.default_compression_toggle = ctk.CTkSegmentedButton(self, variable = default_compression_var, values = QUALITY_LIST ,corner_radius = 12)
-
 
         self.setting_title.place(relx = 0.05, rely = 0.05, anchor = 'nw')
         self.default_compression_toggle.place(relx = 0.5, rely= 0.55, relwidth = 0.75, relheight = 0.45, anchor = 'center')
@@ -104,16 +97,14 @@ class ConfirmSettings(ctk.CTkFrame):
         self.rowconfigure(0)
         self.columnconfigure((0,1,2), uniform = 'a', weight = 1)
 
-        self.cancel_button = ConfirmSettingsButton(self, 'Cancel', parent.close_window, 0)
+        self.cancel_button = ConfirmSettingsButton(self, 'Cancel', parent.destroy, 0)
         self.apply_button = ConfirmSettingsButton(self, 'Apply', self.save_settings_to_file, 1)
         self.reset_button = ConfirmSettingsButton(self, 'Reset', self.reset_settings, 2)
 
 
     def save_settings_to_file(self):
-        filename = SETTINGS_FILENAME
-
-        with open (filename, 'w') as settings:
-            csvwrtiter = csv.writer(settings)
+        with open (SETTINGS_FILENAME, 'w', newline='') as f:
+            csvwrtiter = csv.writer(f)
             csvwrtiter.writerow([self.save_dir_path.get(), self.color_scheme.get(), self.default_compression.get()])
 
 
