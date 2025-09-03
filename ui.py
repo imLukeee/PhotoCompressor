@@ -38,7 +38,7 @@ class Initiate_Image_Import(ctk.CTkButton):
 
 class ImageCanvas(ctk.CTkCanvas):
     def __init__(self, parent, pil_image):
-        super().__init__(master = parent, background = ACCENT_COLOR)
+        super().__init__(master = parent, background = themed_color(ACCENT_COLOR), highlightbackground = themed_color(BUTTON_COLOR))
         self.place(relx = 0.5, rely = 0.05, relwidth = 0.75, relheight = 0.5, anchor = 'n')
 
         self.original_pil = pil_image
@@ -75,7 +75,7 @@ class ImageCanvas(ctk.CTkCanvas):
 
 class UserControls(ctk.CTkFrame):
     def __init__(self, parent, original, original_size, save_path_var, compression_var):
-        super().__init__(parent, fg_color= ACCENT_COLOR)
+        super().__init__(parent, fg_color = ACCENT_COLOR)
         self.main_window = parent
 
         self.ArialBold = ctk.CTkFont('Arial', 28, 'bold')
@@ -152,7 +152,7 @@ class UserControls(ctk.CTkFrame):
     
 class SettingsMenu(ctk.CTkButton):
     def __init__(self, parent, settings_var, save_dir_var, color_scheme_var, default_compression_var):
-        super().__init__(master = parent, text = '⚙︎', font = ctk.CTkFont('Arial', 24), fg_color = 'transparent', hover_color = MENU_BUTTON_HOVER, corner_radius = 12, command = self.open_settings)
+        super().__init__(master = parent, text = '⚙︎', font = ctk.CTkFont('Arial', 24), fg_color = 'transparent', hover_color = MENU_BUTTON_HOVER, text_color = TEXT_COLOR, corner_radius = 12, command = self.open_settings)
         self.place(relx = 0.99, rely = 0.01, relwidth = 0.05, relheight = 0.05, anchor = 'ne')
         
         self.settings_window = settings_var

@@ -1,5 +1,5 @@
 import customtkinter as ctk
-from ui import Initiate_Image_Import, SettingsMenu
+from ui import Initiate_Image_Import, SettingsMenu, ImageCanvas
 from colors import *
 import csv
 
@@ -60,6 +60,9 @@ class App(ctk.CTk):
     
     def apply_theme(self, *args):
         ctk.set_appearance_mode(self.settings['color_scheme'].get())
+        for widget in self.winfo_children():
+            if isinstance(widget, ImageCanvas):
+                widget.configure(background = themed_color(ACCENT_COLOR), highlightbackground = themed_color(BUTTON_COLOR))
 
 
     def run_app(self):
