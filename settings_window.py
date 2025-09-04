@@ -1,6 +1,7 @@
 import customtkinter as ctk
 from tkinter import filedialog
 from colors import *
+from widgets import *
 import csv, os
 
 #csv structure:
@@ -66,7 +67,7 @@ class ColorSchemeSelector(ctk.CTkFrame):
         self.default_color_mode_var = ctk.StringVar(value = 'Dark')
 
         self.setting_title = ctk.CTkLabel(self, text = 'Apperance', font = title_font)
-        self.color_mode_toggle = ctk.CTkSegmentedButton(self, variable = color_scheme_var, values = ['Light', 'Dark'], corner_radius = 12, text_color = TEXT_COLOR, fg_color = BG_COLOR, selected_color = BUTTON_COLOR, unselected_color = MENU_BUTTON_HOVER, selected_hover_color = BUTTON_HOVER, unselected_hover_color = MENU_BUTTON_HOVER)
+        self.color_mode_toggle = SegmentedSelector(self, color_scheme_var, values = ['Light', 'Dark'])
 
 
         self.setting_title.place(relx = 0.05, rely = 0.05, anchor = 'nw')
@@ -79,7 +80,8 @@ class DefaultCompressionSelector(ctk.CTkFrame):
         self.pack(side = 'top', expand = True, fill = 'both')
 
         self.setting_title = ctk.CTkLabel(self, text = 'Default Compression', font = title_font)
-        self.default_compression_toggle = ctk.CTkSegmentedButton(self, variable = default_compression_var, values = QUALITY_LIST, corner_radius = 12, text_color = TEXT_COLOR, fg_color = BG_COLOR, selected_color = BUTTON_COLOR, unselected_color = MENU_BUTTON_HOVER, selected_hover_color = BUTTON_HOVER, unselected_hover_color = MENU_BUTTON_HOVER)
+        self.default_compression_toggle = SegmentedSelector(self, default_compression_var, values = QUALITY_LIST)
+        
 
         self.setting_title.place(relx = 0.05, rely = 0.05, anchor = 'nw')
         self.default_compression_toggle.place(relx = 0.5, rely= 0.55, relwidth = 0.75, relheight = 0.45, anchor = 'center')
@@ -112,9 +114,3 @@ class ConfirmSettings(ctk.CTkFrame):
         self.save_dir_path.set(SETTINGS_DEAFULTS[0])
         self.color_scheme.set(SETTINGS_DEAFULTS[1])
         self.default_compression.set(SETTINGS_DEAFULTS[2])
-        
-
-class ConfirmSettingsButton(ctk.CTkButton):
-    def __init__(self, parent, text, command, column):
-        super().__init__(master = parent, text = text, command = command, text_color = TEXT_COLOR, fg_color = BUTTON_COLOR, hover_color = BUTTON_HOVER, corner_radius = 12, height = 50)
-        self.grid(row = 0, column = column, sticky = 'nsew', padx = 10, pady = 20)

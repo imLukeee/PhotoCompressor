@@ -3,12 +3,19 @@ from PIL import Image, ImageTk
 from tkinter import filedialog, messagebox
 from colors import *
 from settings_window import *
-import os, subprocess, platform, csv
+import os, subprocess, platform
+from widgets import SegmentedSelector
 
 
 class Initiate_Image_Import(ctk.CTkButton):
     def __init__(self, parent, save_dir_var, default_compression_var):
-        super().__init__(master = parent, text = 'Select Image', font = ctk.CTkFont('Arial', 24, 'bold'), command = self.import_image, fg_color = BUTTON_COLOR, hover_color = BUTTON_HOVER, corner_radius = 12)
+        super().__init__(master = parent,
+                         text = 'Select Image',
+                         font = ctk.CTkFont('Arial', 24, 'bold'),
+                         command = self.import_image,
+                         fg_color = BUTTON_COLOR,
+                         hover_color = BUTTON_HOVER,
+                         corner_radius = 12)
         self.place(relx = 0.5, rely = 0.5, relwidth = 0.5, relheight = 0.075, anchor = 'center')
         self.main_window = parent
 
@@ -34,11 +41,11 @@ class Initiate_Image_Import(ctk.CTkButton):
 
     
 
-
-
 class ImageCanvas(ctk.CTkCanvas):
     def __init__(self, parent, pil_image):
-        super().__init__(master = parent, background = themed_color(ACCENT_COLOR), highlightbackground = themed_color(BUTTON_COLOR))
+        super().__init__(master = parent,
+                         background = themed_color(ACCENT_COLOR),
+                         highlightbackground = themed_color(BUTTON_COLOR))
         self.place(relx = 0.5, rely = 0.05, relwidth = 0.75, relheight = 0.5, anchor = 'n')
 
         self.original_pil = pil_image
@@ -79,6 +86,7 @@ class UserControls(ctk.CTkFrame):
         self.main_window = parent
 
         self.ArialBold = ctk.CTkFont('Arial', 28, 'bold')
+        self.ArialBoldQL = ctk.CTkFont('Arial', 24, 'bold')
         self.ArialRegular = ctk.CTkFont('Arial', 28, 'normal')
         self.ButtonFont = ctk.CTkFont('Arial', 18, 'bold')
 
@@ -91,12 +99,21 @@ class UserControls(ctk.CTkFrame):
         self.quality = compression_var
 
         self.filename_label = ctk.CTkLabel(self, text = 'Enter a filename:', font = self.ArialBold)
-        self.filename_entry = ctk.CTkEntry(self, textvariable = self.filename, font = self.ArialRegular, corner_radius = 12)
+        self.filename_entry = ctk.CTkEntry(self,
+                                           textvariable = self.filename,
+                                           font = self.ArialRegular,
+                                           corner_radius = 12)
 
-        self.quality_label = ctk.CTkLabel(self, text = 'Quality:', font = self.ArialBold)
-        self.quality_select = ctk.CTkOptionMenu(self, values = QUALITY_LIST, variable = self.quality, fg_color= BUTTON_COLOR, button_color = BUTTON_COLOR, button_hover_color = BUTTON_HOVER, dropdown_hover_color = BUTTON_HOVER, font = self.ArialRegular, corner_radius = 12)
+        self.quality_label = ctk.CTkLabel(self, text = 'Quality:', font = self.ArialBoldQL)
+        self.quality_select = SegmentedSelector(self, self.quality, values = QUALITY_LIST)
 
-        self.compress_button = ctk.CTkButton(self, text = 'Compress', font = self.ButtonFont, command = self.compress_image, fg_color = BUTTON_COLOR, hover_color = BUTTON_HOVER, corner_radius = 12)
+        self.compress_button = ctk.CTkButton(self,
+                                             text = 'Compress',
+                                             font = self.ButtonFont,
+                                             command = self.compress_image,
+                                             fg_color = BUTTON_COLOR,
+                                             hover_color = BUTTON_HOVER,
+                                             corner_radius = 12)
 
         self.filename_label.place(relx = 0.5, rely = 0.1, anchor = 'center')
         self.filename_entry.place(relx = 0.5, rely =0.2, relwidth = 0.8, relheight = 0.2, anchor = 'n')
@@ -133,7 +150,10 @@ class UserControls(ctk.CTkFrame):
 
         self.original_image = self.original_image.convert('RGB')
         self.full_path = os.path.join(save_path, self.filename)
-        self.original_image.save(self.full_path, format = 'jpeg', optimize = True, quality = quality)
+        self.original_image.save(self.full_path,
+                                 format = 'jpeg',
+                                 optimize = True,
+                                 quality = quality)
 
         #get compressed image size in kilobytes
         self.compressed_size = os.stat(self.full_path).st_size / 1000
@@ -141,6 +161,7 @@ class UserControls(ctk.CTkFrame):
         reduced_size = round(self.orignal_size - self.compressed_size, 2)
         percentage = round((self.orignal_size - self.compressed_size)/self.orignal_size * 100, 2)
 
+        #summary + ask for another one 
         ans = messagebox.askquestion('Compression Finished', f'Image compressed\nSize reduced by {percentage}% ({reduced_size} kB) 🤩\n\nCompress another image?')
         
         if ans == 'yes':
@@ -150,9 +171,16 @@ class UserControls(ctk.CTkFrame):
             self.main_window.destroy()
 
     
-class SettingsMenu(ctk.CTkButton):
+class SettingsMenuButton(ctk.CTkButton):
     def __init__(self, parent, settings_var, save_dir_var, color_scheme_var, default_compression_var):
-        super().__init__(master = parent, text = '⚙︎', font = ctk.CTkFont('Arial', 24), fg_color = 'transparent', hover_color = MENU_BUTTON_HOVER, text_color = TEXT_COLOR, corner_radius = 12, command = self.open_settings)
+        super().__init__(master = parent,
+                         text = '⚙︎',
+                         font = ctk.CTkFont('Arial', 24),
+                         fg_color = 'transparent',
+                         hover_color = MENU_BUTTON_HOVER,
+                         text_color = TEXT_COLOR,
+                         corner_radius = 12,
+                         command = self.open_settings)
         self.place(relx = 0.99, rely = 0.01, relwidth = 0.05, relheight = 0.05, anchor = 'ne')
         
         self.settings_window = settings_var
